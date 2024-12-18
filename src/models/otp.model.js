@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
-import { mailSender } from "../utils/mailsender";
-import { asyncHandler } from "../utils/asyncHandler";
+import { mailSender } from "../utils/mailsender.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const otpSchema = mongoose.Schema(
     {

@@ -2,17 +2,17 @@ import mongoose from "mongoose";
 
 const tagSchema = new mongoose.Schema(
     {
-        name: {
+        tagName: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
         },
         description: {
             type: Number,
         },
-        course: {
-            type : mongoose.Schema.Types.ObjectId,
-            ref: "Course"
-        }
+        // course: {
+        //     type : mongoose.Schema.Types.ObjectId,
+        //     ref: "Course"
+        // }
     },
     {
         timestamps: true

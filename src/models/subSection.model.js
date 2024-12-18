@@ -16,6 +16,10 @@ const subSectionSchema = new mongoose.Schema(
         },
         duration: {
             type: String
+        },
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
         }
     },
     {

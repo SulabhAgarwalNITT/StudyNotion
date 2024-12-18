@@ -16,6 +16,10 @@ const profileSchema = mongoose.Schema(
             type: String,
             trim: true
         },
+        onwer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
     },
     {
         timestamps: true

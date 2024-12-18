@@ -11,7 +11,11 @@ const sectionSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "SubSection"
             }
-        ]
+        ],
+        owner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        }
     },
     {
         timestamps: true

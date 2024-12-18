@@ -37,12 +37,12 @@ const courseSchema = new mongoose.Schema(
         },
         tag: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: ""
+            ref: "Tag"
         },
         StudentEnrolled: [
             {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: ""
+                ref: "User"
             }
         ]
     },
