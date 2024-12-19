@@ -28,12 +28,12 @@ const userSchema = new mongoose.Schema(
             required: true,
             enum:["Admin", "Student","Instructor"]
         },
-        courses: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Course"
-            }
-        ],
+        // courses: [
+        //     {
+        //         type: mongoose.Schema.Types.ObjectId,
+        //         ref: "Course"
+        //     }
+        // ],
         avatar: {
             type: String,
             required: true
@@ -50,6 +50,10 @@ const userSchema = new mongoose.Schema(
         },
         resetPasswordTokenExpiry: {
             type: Date
+        },
+        additionalDetails: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Profile"
         }
     },
     {timestamps: true}

@@ -16,10 +16,10 @@ const profileSchema = mongoose.Schema(
             type: String,
             trim: true
         },
-        onwer: {
+        owner: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User"
-        }
+        },
     },
     {
         timestamps: true

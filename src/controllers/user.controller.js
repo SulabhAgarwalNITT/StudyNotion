@@ -1,9 +1,9 @@
 import { asyncHandler } from "../utils/asyncHandle.js"
 import { User } from "../models/user.model.js"
+import { Profile } from "../models/profile.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { OTP } from "../models/otp.model.js"
-import { isValidObjectId } from "mongoose"
 import { mailSender } from "../utils/mailsender.js"
 import dotenv from "dotenv";
 dotenv.config();
@@ -217,3 +217,66 @@ const resetPassword = asyncHandler( async (req, res) => {
     return res.status(200).json(200, {email: user.email, userId: user._id}, "Password reset successfully")
 })
 
+const deleteAccount = asyncHandler( async (req, res)=>{
+    const user = req.user
+    if(!user){
+        throw new ApiError(400, "First login")
+    }
+
+    const profile = await Profile.findOne({owner: user._id})
+    if(profile){
+        await profile.deleteOne()
+    }
+
+    await User.findByIdAndDelete(user._id)
+
+    return res.status(200).json(new ApiResponse(200, {}, "Account deleted successfully"))
+})
+
+const getUserDetails = asyncHandler ( async (req, res)=>{
+    const user = req.user;
+    const userDetails = User.aggregate(
+        [
+            {
+                $match: {
+                    _id: user._id
+                },
+            },
+            {
+                $lookup : {
+                    from: "Profile",
+                    localField: "additionalDetails",
+                    foreignField: "owner",
+                    as: "additionalDetails"
+                }
+            },
+            {
+                $addFields: {
+                    additionalDetails: {
+                        $first: "$additionalDetails"
+                    }
+                }
+            },
+            {
+                $project: {
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                    accountType: true,
+                    avatar: true,
+                    additionalDetails: true,          
+                }
+            }
+        ]
+    )
+})
+
+export {
+    RegisterUser,
+    loginUser,
+    changePassword,
+    resetPasswordToken,
+    resetPassword,
+    deleteAccount,
+    getUserDetails
+}
