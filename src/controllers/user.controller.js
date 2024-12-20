@@ -1,10 +1,11 @@
-import { asyncHandler } from "../utils/asyncHandle.js"
+import { asyncHandler } from "../utils/asyncHandler.js"
 import { User } from "../models/user.model.js"
 import { Profile } from "../models/profile.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { OTP } from "../models/otp.model.js"
 import { mailSender } from "../utils/mailsender.js"
+import { uploadOnCloudinary } from "../utils/Cloudinary.js"
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -26,7 +27,8 @@ const generateAccessAndRefreshToken = async (userId) =>{
 }
 
 const RegisterUser = asyncHandler( async (req, res)=>{
-    const {firstName, lastName, email, password, confirmPassword, contactNumber, otp} = req.body
+    const {firstName, lastName, email, password, confirmPassword, accountType, otp} = req.body
+    console.log(req.body)
     if(firstName.trim()===""){
         throw new ApiError(400, "First Name is not correct")  
     }
@@ -49,11 +51,12 @@ const RegisterUser = asyncHandler( async (req, res)=>{
 
     // check for the otp 
     const checkOtp = await OTP.findOne({email}).sort({createdAt: -1}).limit(1)
-    if(!checkOtp.length){
+    console.log(checkOtp)
+    if(!checkOtp){
         throw new ApiError(400, "OTP not found in db")
     }
 
-    if(checkOtp.OTP!== otp){
+    if(otp !== checkOtp.otp){
         throw new ApiError(400, "OTP do not match")
     }
 
@@ -63,7 +66,8 @@ const RegisterUser = asyncHandler( async (req, res)=>{
         lastName,
         email,
         password,
-        contactNumber,
+        accountType,
+        // contactNumber,
         avatar: `https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`
     })
 
@@ -73,6 +77,8 @@ const RegisterUser = asyncHandler( async (req, res)=>{
     }
 
     return res.status(200).json(new ApiResponse(200, {
+            _id: createdUser._id,
+            accountType: createdUser.accountType,
             firstName: createdUser.firstName,
             lastName: createdUser.lastName,
             email: createdUser.email,
@@ -90,13 +96,13 @@ const loginUser = asyncHandler( async (req, res) => {
     }
 
     // check if user exist or not
-    const user = User.findOne({email})
+    const user = await User.findOne({email})
     if(!user){
         throw new ApiError(400, "user with this email does not exist, Please sign up")
     }
 
     // check if password is correct or not
-    const validatePassword = user.isPasswordCorrect(password)
+    const validatePassword = await user.isPasswordCorrect(password)
     if(!validatePassword){
         throw new ApiError(400, "Password is not correct, Please try again")
     }
@@ -107,6 +113,9 @@ const loginUser = asyncHandler( async (req, res) => {
     }
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+    if(!loggedInUser){
+        throw new ApiError(500, "Failed in login, try again later")
+    }
 
     const option = {
         httpOnly : true,
@@ -122,7 +131,6 @@ const loginUser = asyncHandler( async (req, res) => {
 
 const changePassword = asyncHandler ( async (req, res) => {
     const {oldPassword, newPassword, confirmPassword} = req.body
-
     // validate
     if(oldPassword.trim() === "" || newPassword.trim() === "" || confirmPassword.trim()===""){
         throw new ApiError(400, "wrong entry provided, Please give a valid entry")
@@ -135,7 +143,7 @@ const changePassword = asyncHandler ( async (req, res) => {
     // check old password
     const user = await User.findById(req.user._id)
 
-    const isCorrectOldPassword = user.isPasswordCorrect(oldPassword)
+    const isCorrectOldPassword = await user.isPasswordCorrect(oldPassword)
     if(!isCorrectOldPassword){
         throw new ApiError(400, "Old password is not correct")
     }
@@ -144,7 +152,36 @@ const changePassword = asyncHandler ( async (req, res) => {
     user.password = newPassword
     await user.save({validateBeforeSave: false})
 
-    return res.status(200).json(new ApiResponse(200, {} ,  ""))
+    return res.status(200).json(new ApiResponse(200, {_id: user._id} ,  "Password Updated Successfully"))
+})
+
+const changeAvatar = asyncHandler( async (req, res)=>{
+    const user = req.user
+    const avatarPath = req.file?.path
+
+    if(!avatarPath){
+        throw new ApiError(400, "Pass user avatar")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarPath)
+    if(!avatar){
+        throw new ApiError(400, "Pass user avatar")
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        {
+            avatar: avatar.url
+        },
+        {
+            new :true
+        }
+    )
+    if(!updatedUser){
+        throw new ApiError(500, "Error in updating user")
+    }
+
+    return res.status(200).json(200, {_id: updatedUser._id, avatar: updatedUser.avatar}, "avatar changed successfully")
 })
 
 const resetPasswordToken = asyncHandler( async (req, res)=>{
@@ -269,6 +306,12 @@ const getUserDetails = asyncHandler ( async (req, res)=>{
             }
         ]
     )
+
+    if(!userDetails.length){
+        throw new ApiError(404, "No user details found")
+    }
+
+    return res.status(200).json(new ApiResponse(200, userDetails[0], "User details fetched successfully"))
 })
 
 export {
@@ -278,5 +321,6 @@ export {
     resetPasswordToken,
     resetPassword,
     deleteAccount,
-    getUserDetails
+    getUserDetails,
+    changeAvatar
 }

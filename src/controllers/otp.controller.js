@@ -9,13 +9,16 @@ import { generate } from "otp-generator"
 const createOTP = asyncHandler( async (req, res)=>{
     // get  new-email/unregistered email from user
     const {email} = req.body
+    if(!email){
+        throw new ApiError(400, "Please send email")
+    }
 
     // check if user already exist
-    const user = User.findOne({
+    const user = await User.findOne({
         email: email
     })
     if(user){
-        throw new ApiError("400", "user with email already exist")
+        throw new ApiError(400, "user with email already exist")
     }
 
     // generate otp
@@ -32,13 +35,13 @@ const createOTP = asyncHandler( async (req, res)=>{
             otp: generatedOTP
         }
     )
-
-    // checking otp is formed or not
-    const Otp = await OTP.findById(otp.id).select("-otp")
-    if(Otp){
-        throw new ApiError(500, "Error in updating OTP in database")
+    if(!otp){
+        throw new ApiError(400, "Error in saving otp to database")
     }
-
     // return response
-    return res.status(400).json(new ApiResponse(200, otp, "OTP send saved in db"))
+    return res.status(200).json(new ApiResponse(200, {email: otp.email, _id: otp._id}, "OTP send saved in db"))
 })
+
+export {
+    createOTP
+}

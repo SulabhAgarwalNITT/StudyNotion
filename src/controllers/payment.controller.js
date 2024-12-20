@@ -7,7 +7,6 @@ import { User } from "../models/user.model.js";
 import { mailSender } from "../utils/mailsender.js";
 import { isValidObjectId } from "mongoose";
 import { Subscription } from "../models/subscription.model.js";
-import { mailSender } from "../utils/mailsender.js";
 
 const capturePayment = asyncHandler ( async (req, res)=>{
     const {courseId}= req.params;
@@ -88,3 +87,8 @@ const verifySignature = asyncHandler( async (req, res)=>{
 
     return res.status(200).json(new ApiResponse(200, subscribed, "Course added successfully"))
 })
+
+export {
+    capturePayment,
+    verifySignature
+}

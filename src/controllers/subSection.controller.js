@@ -83,7 +83,6 @@ const updateSubSection = asyncHandler( async (req, res)=>{
     return res.status(200).json(new ApiResponse(200, subSection, "SubSection updated successfully"))
 })
 
-
 const deleteSubSection = asyncHandler( async (req, res)=>{
     const {subSectionId} = req.params;
 
@@ -114,3 +113,9 @@ const deleteSubSection = asyncHandler( async (req, res)=>{
     
     return res.status(200).json(new ApiResponse(200, {}, "Section deleted successfully"))
 })
+
+export {
+    createSubSection,
+    updateSubSection,
+    deleteSubSection
+}

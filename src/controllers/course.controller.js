@@ -3,7 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Course } from "../models/course.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
-import { Tag } from "../models/category.model.js";
+import { Category } from "../models/category.model.js";
 import { User } from "../models/user.model.js";
 import { Subscription } from "../models/subscription.model.js";
 import { isValidObjectId } from "mongoose";
@@ -115,7 +115,7 @@ const getCourseDetail = asyncHandler( async (req, res)=>{
         throw new ApiError(400, "courseId is not valid")
     }
 
-    const courseDetail = Course.aggregate(
+    const courseDetail = await Course.aggregate(
         [
             {
                 $match: {
@@ -167,6 +167,15 @@ const getCourseDetail = asyncHandler( async (req, res)=>{
         ]
     )
 
+    if(!courseDetail.length){
+        throw new ApiError(400, "not course details found ")
+    }
 
+    return res.status(200).json(new ApiResponse(200, courseDetail[0], "Course Detail found successfully"))
 })
 
+export {
+    addCourse,
+    getAllCourse,
+    getCourseDetail
+}

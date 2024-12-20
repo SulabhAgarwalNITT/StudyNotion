@@ -24,10 +24,10 @@ const courseSchema = new mongoose.Schema(
                 ref: "Section"
             }
         ],
-        ratingAndReview: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Rating"
-        },
+        // ratingAndReview: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Rating"
+        // },
         price : {
             type: Number,
             required: true

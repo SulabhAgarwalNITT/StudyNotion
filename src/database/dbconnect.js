@@ -12,4 +12,5 @@ export async function dbconnection() {
         console("MongoDB connection error" , err)
         process.exit(1)
     }
-} 
+}
+

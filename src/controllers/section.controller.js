@@ -99,3 +99,9 @@ const deleteSection = asyncHandler( async (req, res)=>{
 
     return res.status(200).json(new ApiResponse(200, {}, "Section deleted successfully"))
 })
+
+export {
+    createSection,
+    updateSection,
+    deleteSection
+}

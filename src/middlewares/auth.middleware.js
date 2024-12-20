@@ -1,24 +1,23 @@
-import { ApiError } from "../utils/ApiError";
-import { asyncHandler } from "../utils/asyncHandler";
+import { ApiError } from "../utils/ApiError.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 dotenv.config();
 
 
 const verifyJWT = asyncHandler ( async (req, res, next)=> {
     try {
-        const accessToken = req.cookie.accessToken || req.header("Authorization").replace("Bearer ", "");
+        const accessToken = req.cookies?.accessToken || req.header("Authorization").replace("Bearer ", "");
         if(!accessToken){
             throw new ApiError(400, "Access Token not found")
         }
-    
-        const decodeToken = jwt.verify(accessToken, process.env.ACCESS_TOKEN_EXPIRY)
+        const decodeToken =  jwt.verify(accessToken, process.env.ACCESS_TOKEN_SECRET)
         const user = await User.findById(decodeToken._id).select("-password -refreshToken")
         if(!user){
             throw new ApiError(200, "User not found, invalid accessToken")
         }
-    
+        
         req.user = user;
         next()
     } catch (error) {
