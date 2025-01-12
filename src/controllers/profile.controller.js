@@ -24,17 +24,17 @@ const createProfile = asyncHandler( async (req, res)=>{
         dob
     })
 
-    const userUpdate = await User.findByIdAndUpdate(
-        {
-            _id: user._id
-        },
-        {
-            additionalDetails: profile._id
-        },
-        {
-            new: true
-        }
-    )
+    // const userUpdate = await User.findByIdAndUpdate(
+    //     {
+    //         _id: user._id
+    //     },
+    //     {
+    //         additionalDetails: profile._id
+    //     },
+    //     {
+    //         new: true
+    //     }
+    // )
 
     return res.status(200).json(new ApiResponse(200, profile, "Profile created successfully"))
 })

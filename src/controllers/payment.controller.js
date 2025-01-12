@@ -10,13 +10,13 @@ import { Subscription } from "../models/subscription.model.js";
 
 const capturePayment = asyncHandler ( async (req, res)=>{
     const {courseId}= req.params;
-
+    console.log(1)
     // validate details
     if(!isValidObjectId(courseId)){
         throw new ApiError(400, "Courseid not found")
     }
 
-    const course = Course.findById(courseId);
+    const course = await Course.findById(courseId);
     if(!course){
         throw new ApiError(400, "Course not found")
     }
@@ -27,7 +27,7 @@ const capturePayment = asyncHandler ( async (req, res)=>{
     }
 
     // if user have already buy that course
-    const isSubsribed = Subscription.findOne({
+    const isSubsribed = await Subscription.findOne({
         courseId: courseId,
         studentId: user._id
     })
@@ -46,13 +46,14 @@ const capturePayment = asyncHandler ( async (req, res)=>{
         } 
     })
 
-    if(!response){
+    if(!paymentResponse){
         throw new ApiError(500, "Unable to create")
     }
 
     return res.status(200).json(new ApiResponse(200, {
         orderId: paymentResponse.id,
         courseName : course.courseName,
+        amount : paymentResponse.amount
     } , "order created successsfully"))
 })
 
@@ -60,7 +61,7 @@ const capturePayment = asyncHandler ( async (req, res)=>{
 const verifySignature = asyncHandler( async (req, res)=>{
     const webhookSecret = "12345678"
     const signature = req.headers["x-razorpay-signature"]
-
+    console.log(signature)
     const shasum = crypto.createHmac("shac256", webhookSecret)
     shasum.update(JSON.stringify(req.body))
     const digest = shasum.digest("hex")    

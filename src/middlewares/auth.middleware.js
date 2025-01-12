@@ -39,7 +39,7 @@ const isStudent = asyncHandler ( async (req, res, next) => {
 })
 
 const isInstructor = asyncHandler ( async (req, res, next) => {
-    const accountType = req.user?.accountType
+    const accountType = req.user?.accountType;
     if(!accountType){
         throw new ApiError(500, "Not able to find account type")
     }

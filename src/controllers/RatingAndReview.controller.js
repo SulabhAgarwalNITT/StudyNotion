@@ -93,8 +93,8 @@ const getAverageReview = asyncHandler( async (req, res)=>{
         ]
     )
 
-    if(avgRating.length){
-        throw new ApiError(400, "not course details found ")
+    if(!avgRating.length){
+        throw new ApiError(400, "Not rating done till now")
     }
 
     return res.status(200).json(new ApiResponse(200, avgRating[0], "Course Detail found successfully"))
@@ -111,7 +111,7 @@ const getAllReviewOnParticularCourse = asyncHandler( async (req, res)=>{
         throw new ApiError(400, "Course not found")
     }
 
-    const avgRating = await Rating.aggregate(
+    const allRating = await Rating.aggregate(
         [
             {
                 $match: {
@@ -120,7 +120,7 @@ const getAllReviewOnParticularCourse = asyncHandler( async (req, res)=>{
             },
             {
                 $lookup: {
-                    from : "User",
+                    from : "users",
                     localField: "owner",
                     foreignField: "_id",
                     as : "owner",
@@ -142,20 +142,14 @@ const getAllReviewOnParticularCourse = asyncHandler( async (req, res)=>{
                     }
                 }
             },
-            {
-                $project: {
-                    avgRating: true,
-                    courseId: true,
-                }
-            }
         ]
     )
 
-    if(avgRating.length){
-        throw new ApiError(400, "not course details found ")
+    if(!allRating.length){
+        throw new ApiError(400, "No rating done till now")
     }
 
-    return res.status(200).json(new ApiResponse(200, avgRating[0], "Course Detail found successfully"))
+    return res.status(200).json(new ApiResponse(200, allRating, "Course Detail found successfully"))
 })
 
 export {

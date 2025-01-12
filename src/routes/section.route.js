@@ -10,7 +10,7 @@ import {isInstructor, verifyJWT} from "../middlewares/auth.middleware.js"
 const router = Router()
 router.use(verifyJWT).use(isInstructor)
 
-router.route("/create").post(createSection)
+router.route("/create/:courseId").post(createSection)
 router.route("/:sectionId").patch(updateSection).delete(deleteSection)
 
 export default router

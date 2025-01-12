@@ -34,7 +34,7 @@ const RegisterUser = asyncHandler( async (req, res)=>{
     }
 
     // validate the details
-    if(!firstName || !lastName || !email || !password || !confirmPassword || !otp){
+    if(!firstName || !lastName || !email || !password || !confirmPassword || !otp || !accountType){
         throw new ApiError(400, "Fill all the details properly")
     }
 
@@ -158,7 +158,7 @@ const changePassword = asyncHandler ( async (req, res) => {
 const changeAvatar = asyncHandler( async (req, res)=>{
     const user = req.user
     const avatarPath = req.file?.path
-
+    console.log(req.file)
     if(!avatarPath){
         throw new ApiError(400, "Pass user avatar")
     }
@@ -181,27 +181,57 @@ const changeAvatar = asyncHandler( async (req, res)=>{
         throw new ApiError(500, "Error in updating user")
     }
 
-    return res.status(200).json(200, {_id: updatedUser._id, avatar: updatedUser.avatar}, "avatar changed successfully")
+    return res.status(200).json(new ApiResponse(200, {_id: updatedUser._id, avatar: updatedUser.avatar}, "avatar changed successfully"))
+})
+
+const logout = asyncHandler( async (req, res)=>{
+    const user = req.user
+    if(!user){
+        throw new ApiError(400, "user is already logout")
+    }
+    const userUpdate = await User.findByIdAndUpdate(
+        user._id,
+        {
+            $unset: {
+                refreshToken : ""
+            }
+        },
+        {
+            new : true
+        }
+    )
+    if(!userUpdate){
+        throw new ApiError(400, "Error in logging our user")
+    }
+
+    const option = {
+        httpOnly : true,
+        secure : true
+    }
+
+    return res
+    .clearCookie("accessToken", option)
+    .clearCookie("refreshToken", option)
+    .json(new ApiResponse(200, {_id: user._id}, "User logout successfully"))
 })
 
 const resetPasswordToken = asyncHandler( async (req, res)=>{
-    // get email from user
-    const {email}= req.body;
+    // get email from user 
+    const {email}= req.body
     if(email.trim()=== ''){
         throw new ApiError(401, "Properly write email")
     }
 
     // verify user with email exist or not
-    const user = User.findOne({email});
+    const user = await User.findOne({email});
     if(!user){
         throw new ApiError(401, "User with email doesn't exist")
     }
 
     // generate resetPassword Token
-    const token = crypto.randomUUID();
-
+    const token = crypto.randomUUID();console.log(token)
     // save the details in usermodel to verify it later
-    const updatedDetails = await User.findByIdAndUpdate(
+    const updatedDetails =  await User.findOneAndUpdate(
         {
             email: email
         },
@@ -211,11 +241,10 @@ const resetPasswordToken = asyncHandler( async (req, res)=>{
         },
         {new : true}
     )
-
     // Send verification email
     const url = `https://localhost:3000/update-password/${token}`
     await mailSender(email, 
-                    "Reset Password link is provided valid for only 5 minutes", 
+                    "Reset Password link is provided below, Valid for only 5 minutes", 
                     `Password reset link - ${url}`
     )
 
@@ -224,7 +253,8 @@ const resetPasswordToken = asyncHandler( async (req, res)=>{
 
 const resetPassword = asyncHandler( async (req, res) => {
     // get token from body
-    const {password, confirmPassword, token} = req.body;
+    const {password, confirmPassword} = req.body;
+    const {token} = req.params
 
     // validation
     if(password !== confirmPassword){
@@ -236,7 +266,7 @@ const resetPassword = asyncHandler( async (req, res) => {
     }
 
     // check if same token exist in user resetpassword or not
-    const user = User.findOne({resetPasswordToken: token})
+    const user = await User.findOne({resetPasswordToken: token})
 
     if(!user){
         throw new ApiError(400, "Invalid token")
@@ -249,9 +279,12 @@ const resetPassword = asyncHandler( async (req, res) => {
 
     // change password
     user.password = password
+    //once use then same link cant be use again
+    user.resetPasswordToken = ""
     await user.save({validateBeforeSave: false})
 
-    return res.status(200).json(200, {email: user.email, userId: user._id}, "Password reset successfully")
+
+    return res.status(200).json(new ApiResponse(200, {email: user.email, userId: user._id}, "Password reset successfully"))
 })
 
 const deleteAccount = asyncHandler( async (req, res)=>{
@@ -272,7 +305,8 @@ const deleteAccount = asyncHandler( async (req, res)=>{
 
 const getUserDetails = asyncHandler ( async (req, res)=>{
     const user = req.user;
-    const userDetails = User.aggregate(
+    console.log(1)
+    const userDetails = await User.aggregate(
         [
             {
                 $match: {
@@ -281,8 +315,8 @@ const getUserDetails = asyncHandler ( async (req, res)=>{
             },
             {
                 $lookup : {
-                    from: "Profile",
-                    localField: "additionalDetails",
+                    from: "profiles",
+                    localField: "_id",
                     foreignField: "owner",
                     as: "additionalDetails"
                 }
@@ -322,5 +356,6 @@ export {
     resetPassword,
     deleteAccount,
     getUserDetails,
-    changeAvatar
+    changeAvatar,
+    logout
 }

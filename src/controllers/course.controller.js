@@ -6,15 +6,15 @@ import { uploadOnCloudinary } from "../utils/Cloudinary.js";
 import { Category } from "../models/category.model.js";
 import { User } from "../models/user.model.js";
 import { Subscription } from "../models/subscription.model.js";
-import { isValidObjectId } from "mongoose";
+import mongoose, { isValidObjectId, mongo } from "mongoose";
 
 const addCourse = asyncHandler( async(req, res)=>{
-    const {courseName, courseDescription, price, whatWillYouLearn, tag} = req.body
+    const {courseName, courseDescription, price, whatWillYouLearn, category} = req.body
     const user = req.user
     const thumbnailPath = req.file?.path
 
     // validate 
-    if(!courseName || !courseDescription || !price || !whatWillYouLearn){
+    if(!courseName || !courseDescription || !price || !whatWillYouLearn || !category){
         throw new ApiError(400, "All details not provided")
     }
 
@@ -23,10 +23,16 @@ const addCourse = asyncHandler( async(req, res)=>{
     }
 
     const thumbnail = await uploadOnCloudinary(thumbnailPath)
-    const tagDetails = await Tag.findById(tag)
-    if(!tagDetails){
-        throw new ApiError(400, "Tag Not found")
+
+    if(!isValidObjectId(category)){
+        throw new ApiError(200, "Invalid categoryId")
     }
+
+    const categoryDetails = await Category.findById(category)
+    if(!categoryDetails){
+        throw new ApiError(400, "category Not found")
+    }
+
     // create
     const course = await Course.create(
         {
@@ -36,7 +42,7 @@ const addCourse = asyncHandler( async(req, res)=>{
             instructor: user._id,
             whatWillYouLearn,
             thumbnail: thumbnail.url,
-            tag: tag
+            // category: category
         }
     )
 
@@ -72,7 +78,7 @@ const getAllCourse =  asyncHandler( async (req, res)=>{
             },
             {
                 $lookup : {
-                    from: "User" ,
+                    from: "users" ,
                     localField: "instructor",
                     foreignField: "_id",
                     as: "instructor",
@@ -80,6 +86,7 @@ const getAllCourse =  asyncHandler( async (req, res)=>{
                         { 
                             $project: {
                                 firstName:true,
+                                lastName: true,
                                 avatar: true,
                                 _id: true
                             }
@@ -99,14 +106,18 @@ const getAllCourse =  asyncHandler( async (req, res)=>{
                     courseName: true,
                     courseDescription: true,
                     instructor: true,
-                    ratingAndReview: true,
                     thumbnail: true,
-                    ratingAndReview: true,
                     price: true,
                 }
             }
         ]
     )
+
+    if(!allcourse.length){
+        throw new ApiError(400, "No courses found")
+    }
+
+    return res.status(200).json(new ApiResponse(200, allcourse, "Courses found successfully"))
 })
 
 const getCourseDetail = asyncHandler( async (req, res)=>{
@@ -119,12 +130,12 @@ const getCourseDetail = asyncHandler( async (req, res)=>{
         [
             {
                 $match: {
-                    _id: courseId
+                    _id: new mongoose.Types.ObjectId(courseId)
                 },
             },
             {
                 $lookup : {
-                    from: "User" ,
+                    from: "users" ,
                     localField: "instructor",
                     foreignField: "_id",
                     as: "instructor",
@@ -141,14 +152,14 @@ const getCourseDetail = asyncHandler( async (req, res)=>{
             },
             {
                 $lookup : {
-                    from: "Section" ,
+                    from: "sections" ,
                     localField: "courseContent",
                     foreignField: "_id",
                     as: "section",
                     pipeline: [
                         {
                             $lookup: {
-                                from: "SubSection" ,
+                                from: "subsections" ,
                                 localField: "subSection",
                                 foreignField: "_id",
                                 as: "subSection",

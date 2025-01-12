@@ -51,10 +51,10 @@ const userSchema = new mongoose.Schema(
         resetPasswordTokenExpiry: {
             type: Date
         },
-        additionalDetails: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Profile"
-        }
+        // additionalDetails: {
+        //     type: mongoose.Schema.Types.ObjectId,
+        //     ref: "Profile"
+        // }
     },
     {timestamps: true}
 )

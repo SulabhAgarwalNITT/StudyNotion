@@ -90,7 +90,7 @@ const deleteSection = asyncHandler( async (req, res)=>{
         {
             courseContent : sectionId
         },
-        {
+        {   
             $pull: {
                 courseContent:sectionId
             }

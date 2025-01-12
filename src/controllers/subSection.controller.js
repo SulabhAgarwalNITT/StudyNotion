@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { Section } from "../models/section.model.js";
 import { SubSection } from "../models/subSection.model.js";
 import { uploadOnCloudinary } from "../utils/Cloudinary.js";
+import { isValidObjectId } from "mongoose";
 
 const createSubSection = asyncHandler( async (req, res)=>{
     const {sectionId} = req.params;
@@ -69,7 +70,7 @@ const updateSubSection = asyncHandler( async (req, res)=>{
 
     const subSection = await SubSection.findById(subSectionId)
     if(!subSection){
-        throw new ApiError(400, "SectionId not exist or error in updating section")
+        throw new ApiError(400, "SecSection not exist or error in updating section")
     }
 
     if(!subSection.owner.equals(req.user._id)){
@@ -111,7 +112,7 @@ const deleteSubSection = asyncHandler( async (req, res)=>{
             }
         )
     
-    return res.status(200).json(new ApiResponse(200, {}, "Section deleted successfully"))
+    return res.status(200).json(new ApiResponse(200, {_id: subSection._id}, "sub-Section deleted successfully"))
 })
 
 export {

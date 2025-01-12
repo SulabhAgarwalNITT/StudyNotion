@@ -8,6 +8,6 @@ import {isStudent, verifyJWT} from "../middlewares/auth.middleware.js"
 const router = Router()
 router.use(verifyJWT)
 router.route("/capture-payment/:courseId").post(isStudent, capturePayment)
-router.route("/verify").post(verifySignature)
+router.route("/verify-signature").post(verifySignature)
 
 export default router

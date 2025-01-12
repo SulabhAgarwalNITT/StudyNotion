@@ -3,11 +3,12 @@ import mongoose from "mongoose";
 const categorySchema = new mongoose.Schema(
     {
         categoryName: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
+            type: String,
+            required : true,
+            unique: true
         },
         description: {
-            type: Number,
+            type: String,
         },
         // course: {
         //     type : mongoose.Schema.Types.ObjectId,

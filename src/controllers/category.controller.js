@@ -11,15 +11,15 @@ const createCategory = asyncHandler( async (req, res)=>{
     }
 
     // check if category already exist
-    const category = await Category.findOne({categoryName: categoryName})
+    const category = await Category.findOne({categoryName: categoryName.toLowerCase().trim()})
     if(category){
         throw new ApiError(400, "category with this name already exist")
     }
 
     const createdcategory = await Category.create(
         {
-            categoryName,
-            description
+            categoryName: categoryName.toLowerCase().trim(),
+            description: description.trim()
         }
     )
 
